@@ -1,0 +1,27 @@
+# Streamlit app + PostgreSQL for prediction history.  Run: docker compose up --build
+services:
+  app:
+    build: .
+    # run the database-backed app instead of the image's default app.py
+    entrypoint: ["streamlit", "run", "db_app.py", "--server.port=8501",
+                 "--server.address=0.0.0.0"]
+    ports:
+      - "8501:8501"
+    environment:
+      DATABASE_URL: postgresql+psycopg://mlapp:${POSTGRES_PASSWORD}@db:5432/mlapp
+    depends_on:
+      - db
+    restart: unless-stopped
+
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: mlapp
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}     # read from a local .env file
+      POSTGRES_DB: mlapp
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+
+volumes:
+  pgdata:
